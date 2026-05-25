@@ -1,4 +1,4 @@
-# Install script for directory: /home/lingkongfk/my-system-monitor
+# Install script for directory: /home/lingkongfk/my-simple-system-monitor
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/lingkongfk/my-system-monitor/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/lingkongfk/my-simple-system-monitor/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

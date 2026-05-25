@@ -1,0 +1,22 @@
+[
+{
+  "directory": "/home/lingkongfk/my-simple-system-monitor/build",
+  "command": "/usr/bin/c++  -I/home/lingkongfk/my-simple-system-monitor/include  -g -fsanitize=address -fno-omit-frame-pointer -o CMakeFiles/main.dir/src/LinuxParser.cpp.o -c /home/lingkongfk/my-simple-system-monitor/src/LinuxParser.cpp",
+  "file": "/home/lingkongfk/my-simple-system-monitor/src/LinuxParser.cpp"
+},
+{
+  "directory": "/home/lingkongfk/my-simple-system-monitor/build",
+  "command": "/usr/bin/c++  -I/home/lingkongfk/my-simple-system-monitor/include  -g -fsanitize=address -fno-omit-frame-pointer -o CMakeFiles/main.dir/src/Process.cpp.o -c /home/lingkongfk/my-simple-system-monitor/src/Process.cpp",
+  "file": "/home/lingkongfk/my-simple-system-monitor/src/Process.cpp"
+},
+{
+  "directory": "/home/lingkongfk/my-simple-system-monitor/build",
+  "command": "/usr/bin/c++  -I/home/lingkongfk/my-simple-system-monitor/include  -g -fsanitize=address -fno-omit-frame-pointer -o CMakeFiles/main.dir/src/System.cpp.o -c /home/lingkongfk/my-simple-system-monitor/src/System.cpp",
+  "file": "/home/lingkongfk/my-simple-system-monitor/src/System.cpp"
+},
+{
+  "directory": "/home/lingkongfk/my-simple-system-monitor/build",
+  "command": "/usr/bin/c++  -I/home/lingkongfk/my-simple-system-monitor/include  -g -fsanitize=address -fno-omit-frame-pointer -o CMakeFiles/main.dir/src/main.cpp.o -c /home/lingkongfk/my-simple-system-monitor/src/main.cpp",
+  "file": "/home/lingkongfk/my-simple-system-monitor/src/main.cpp"
+}
+]

@@ -1,5 +1,6 @@
 #include "System.h"
 #include <chrono>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <cmath>
@@ -14,7 +15,7 @@ double getMonotonicTime(){
 
 
 void System::Update(){
-
+    std::unique_lock<std::mutex> lock(mtx_);
     //CPU信息更新
     utilization_.clear();
     processes_.clear();
@@ -57,13 +58,18 @@ void System::Update(){
     }
 
 }
-std::vector<std::string>& System::Utilization(){
-    return utilization_;
+std::vector<std::string> System::Utilization(){
+    std::unique_lock<std::mutex> lock(mtx_);
+    std::vector<std::string> ans(utilization_);
+    return ans;
 }
-std::vector<Process>& System::Processes(){
-    return processes_;
+std::vector<Process> System::Processes(){
+    std::unique_lock<std::mutex> lock(mtx_);
+    std::vector<Process> ans(processes_);
+    return ans;
 }
 
 double System::getCPU(){
+    std::unique_lock<std::mutex> lock(mtx_);
     return CPUused;
 }

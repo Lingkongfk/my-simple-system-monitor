@@ -1,7 +1,7 @@
 CMakeFiles/main.dir/src/LinuxParser.cpp.o: \
- /home/lingkongfk/my-system-monitor/src/LinuxParser.cpp \
+ /home/lingkongfk/my-simple-system-monitor/src/LinuxParser.cpp \
  /usr/include/stdc-predef.h \
- /home/lingkongfk/my-system-monitor/include/LinuxParser.h \
+ /home/lingkongfk/my-simple-system-monitor/include/LinuxParser.h \
  /usr/include/c++/11/string \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/os_defines.h \

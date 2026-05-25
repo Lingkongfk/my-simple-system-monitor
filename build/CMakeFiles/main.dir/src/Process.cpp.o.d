@@ -1,8 +1,8 @@
 CMakeFiles/main.dir/src/Process.cpp.o: \
- /home/lingkongfk/my-system-monitor/src/Process.cpp \
+ /home/lingkongfk/my-simple-system-monitor/src/Process.cpp \
  /usr/include/stdc-predef.h \
- /home/lingkongfk/my-system-monitor/include/Process.h \
- /home/lingkongfk/my-system-monitor/include/LinuxParser.h \
+ /home/lingkongfk/my-simple-system-monitor/include/Process.h \
+ /home/lingkongfk/my-simple-system-monitor/include/LinuxParser.h \
  /usr/include/c++/11/string \
  /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/11/bits/os_defines.h \

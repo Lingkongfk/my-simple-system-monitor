@@ -1,15 +1,34 @@
+#include <chrono>
 #include <iostream>
 #include "Process.h"
 #include "System.h"
 #include <algorithm>
+#include <mutex>
 #include <sys/unistd.h>
+#include <thread>
+#include <atomic>
 
-int main()
-{
-    System s;
+//声明全局变量
+System s;
+std::atomic_bool flag;//判断是否退出
+
+//信息采集线程，每隔1s调用Update()，更新数据
+void Collector(){
     while(true){
+        if(flag){
+            break;
+        }
         s.Update();
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+}
 
+//UI线程，每隔200ms读取一次数据并且刷新显示
+void Display(){
+    while(true){
+        if(flag){
+            break;
+        }
         std::vector<std::string> info = s.Utilization();
         std::vector<Process> procs = s.Processes();
         std::sort(procs.begin(), procs.end(), [](const Process& l, const Process& r)->bool{ 
@@ -18,7 +37,6 @@ int main()
             }
             return l.getCpu() > r.getCpu(); 
         });
-
         printf("\033[H");
         printf("\033[J");
 
@@ -34,11 +52,26 @@ int main()
 
         fflush(stdout);
         sleep(1);
-
     } 
+}
 
+int main()
+{
+    flag = false;
+    std::thread collector(Collector);
+    std::thread display(Display);
 
+    while(true){
+        char choice;
+        std::cin >> choice;
+        if(choice == 'q'){
+            flag = true;
+            break;
+        }
+    }
 
+    collector.join();
+    display.join();
     return 0;
 }
 
