@@ -192,7 +192,8 @@ CMakeFiles/main.dir/src/main.cpp.o: \
  /usr/include/c++/11/bits/node_handle.h \
  /usr/include/c++/11/bits/unordered_map.h \
  /usr/include/c++/11/bits/erase_if.h \
- /usr/include/c++/11/pstl/execution_defs.h \
+ /usr/include/c++/11/pstl/execution_defs.h /usr/include/curses.h \
+ /usr/include/ncurses_dll.h /usr/include/unctrl.h /usr/include/curses.h \
  /usr/include/x86_64-linux-gnu/sys/unistd.h /usr/include/unistd.h \
  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
  /usr/include/x86_64-linux-gnu/bits/environments.h \
@@ -205,4 +206,5 @@ CMakeFiles/main.dir/src/main.cpp.o: \
  /usr/include/c++/11/bits/unique_ptr.h \
  /usr/include/c++/11/bits/this_thread_sleep.h /usr/include/c++/11/atomic \
  /usr/include/c++/11/bits/atomic_base.h \
- /usr/include/c++/11/bits/atomic_lockfree_defines.h
+ /usr/include/c++/11/bits/atomic_lockfree_defines.h \
+ /home/lingkongfk/my-simple-system-monitor/include/Show.h

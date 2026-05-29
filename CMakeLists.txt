@@ -12,3 +12,6 @@ file(GLOB SRC ${PROJECT_SOURCE_DIR}/src/*.cpp)#打开搜索代码文件
 include_directories(${PROJECT_SOURCE_DIR}/include)#头文件路径
 
 add_executable(main ${SRC})
+
+#链接ncurses库
+target_link_libraries(main PRIVATE ncursesw)

@@ -5,6 +5,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/main.dir/src/LinuxParser.cpp.o.d"
   "CMakeFiles/main.dir/src/Process.cpp.o"
   "CMakeFiles/main.dir/src/Process.cpp.o.d"
+  "CMakeFiles/main.dir/src/Show.cpp.o"
+  "CMakeFiles/main.dir/src/Show.cpp.o.d"
   "CMakeFiles/main.dir/src/System.cpp.o"
   "CMakeFiles/main.dir/src/System.cpp.o.d"
   "CMakeFiles/main.dir/src/main.cpp.o"

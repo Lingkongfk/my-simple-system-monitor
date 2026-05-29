@@ -177,6 +177,30 @@ src/Process.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/Process.cpp.s
 .PHONY : src/Process.cpp.s
 
+src/Show.o: src/Show.cpp.o
+.PHONY : src/Show.o
+
+# target to build an object file
+src/Show.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/Show.cpp.o
+.PHONY : src/Show.cpp.o
+
+src/Show.i: src/Show.cpp.i
+.PHONY : src/Show.i
+
+# target to preprocess a source file
+src/Show.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/Show.cpp.i
+.PHONY : src/Show.cpp.i
+
+src/Show.s: src/Show.cpp.s
+.PHONY : src/Show.s
+
+# target to generate assembly for a file
+src/Show.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/Show.cpp.s
+.PHONY : src/Show.cpp.s
+
 src/System.o: src/System.cpp.o
 .PHONY : src/System.o
 
@@ -240,6 +264,9 @@ help:
 	@echo "... src/Process.o"
 	@echo "... src/Process.i"
 	@echo "... src/Process.s"
+	@echo "... src/Show.o"
+	@echo "... src/Show.i"
+	@echo "... src/Show.s"
 	@echo "... src/System.o"
 	@echo "... src/System.i"
 	@echo "... src/System.s"

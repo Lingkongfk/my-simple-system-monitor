@@ -1,1 +1,1 @@
-/usr/bin/c++  -g -fsanitize=address -fno-omit-frame-pointer CMakeFiles/main.dir/src/LinuxParser.cpp.o CMakeFiles/main.dir/src/Process.cpp.o CMakeFiles/main.dir/src/System.cpp.o CMakeFiles/main.dir/src/main.cpp.o -o ../main 
+/usr/bin/c++  -g -fsanitize=address -fno-omit-frame-pointer CMakeFiles/main.dir/src/LinuxParser.cpp.o CMakeFiles/main.dir/src/Process.cpp.o CMakeFiles/main.dir/src/Show.cpp.o CMakeFiles/main.dir/src/System.cpp.o CMakeFiles/main.dir/src/main.cpp.o -o ../main  -lncursesw 
