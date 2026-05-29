@@ -117,11 +117,11 @@ void Display(){
             break;
         case KEY_UP:
             selected--;
-            adjust_scroll(procs.size(), max_y - 8, &selected, &scroll_offset);
+            adjust_scroll(procs.size(), max_y - 8 - 2, &selected, &scroll_offset);
             break;
         case KEY_DOWN:
             selected++;
-            adjust_scroll(procs.size(), max_y - 8, &selected, &scroll_offset);
+            adjust_scroll(procs.size(), max_y - 8 - 2, &selected, &scroll_offset);
             break;
         case 'k':
             //TODO

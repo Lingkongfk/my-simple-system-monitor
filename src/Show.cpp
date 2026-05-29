@@ -89,7 +89,7 @@ void draw_processes(WINDOW *win, std::vector<Process>& procs, int count,
 
     // 进程行
     int row = 2;  // 窗口内的起始行
-    for (int i = 0; i < count && row < max_y - 1; i++) {
+    for (int i = 0; i < count && row < max_y; i++) {
         int data_idx = i + scroll_offset;
         if (data_idx >= count) break;
 
