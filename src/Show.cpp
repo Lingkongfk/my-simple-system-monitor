@@ -84,7 +84,7 @@ void draw_processes(WINDOW *win, std::vector<Process>& procs, int count,
     // 列标题
     wattron(win, COLOR_PAIR(4));
     for (int i = 1; i < max_x - 1; i++) mvwaddch(win, 1, i, ' ');
-    mvwprintw(win, 1, 2, "  PID   PPID       CPU%%  STATUS  COMMAND");
+    mvwprintw(win, 1, 2, "  PID       PPID  CPU%%  STATUS  COMMAND");
     wattroff(win, COLOR_PAIR(4));
 
     // 进程行
@@ -99,9 +99,9 @@ void draw_processes(WINDOW *win, std::vector<Process>& procs, int count,
             for (int c = 1; c < max_x - 1; c++) mvwaddch(win, row, c, ' ');
         }
 
-        mvwprintw(win, row, 2, "%5d  %8d  %5.2f   %s  %s",
-                  stoi(procs[data_idx].Pid()),
-                  stoi(procs[data_idx].Ppid()),
+        mvwprintw(win, row, 2, "%5s  %8s  %5.2f   %s  %s",
+                  procs[data_idx].Pid().c_str(),
+                  procs[data_idx].Ppid().c_str(),
                   procs[data_idx].getCpu(),
                   procs[data_idx].Status().c_str(),
                   procs[data_idx].Command().c_str());

@@ -5,13 +5,13 @@ std::string Process::Pid()const{
     return pid_;
 }
 std::string Process::Command()const{
-    return procInfo_[0];
+    return procInfo_.size() > 0? procInfo_[0] : "N/A";
 }
 std::string Process::Ppid()const{
-    return procInfo_[2];
+    return procInfo_.size() > 2? procInfo_[2] : "N/A";
 }
 std::string Process::Status()const{
-    return procInfo_[1];
+    return procInfo_.size() > 1? procInfo_[1] : "N/A";
 }                
 
 bool Process::setInfo(){

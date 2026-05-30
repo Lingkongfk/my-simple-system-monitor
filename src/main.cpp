@@ -94,12 +94,18 @@ void Display(){
         werase(win_footer);
 
         //获取数据
+        s.lock(); 
         std::vector<std::string> systemInfo = {"Linux Ubuntu22.04"}; //模拟系统数据TODO
         std::vector<std::string> info = s.Utilization();//进程数，运行数，阻塞数
         std::vector<Process> procs = s.Processes();//进程数组, pid ppid status CPU cmd 
         //s.getCPU()可以获得总统CPU使用率
         double CPU_utili = s.getCPU();
+        s.unlock();
 
+        //对数据进程处理
+        if(info.size() < 3){
+            info.resize(3, "N/A");
+        }
         //利用获取的数据进行绘制
         draw_header(win_header, max_x, systemInfo, info, CPU_utili);
         draw_processes(win_body, procs, procs.size(), selected, scroll_offset, max_y - 8, max_x);

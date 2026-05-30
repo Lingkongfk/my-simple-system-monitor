@@ -8,7 +8,12 @@ class System
 public:
     System() = default;
     ~System() = default; 
-
+    void lock(){
+        mtx_.lock();
+    }
+    void unlock(){
+        mtx_.unlock();
+    }
 
     double getCPU();//获取CPU的总使用率
     void Update();  //重新采集数据
