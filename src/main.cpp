@@ -10,6 +10,8 @@
 #include <thread>
 #include <atomic>
 #include <vector>
+#include <sys/types.h>
+#include <signal.h>
 #include "Show.h"
 
 
@@ -24,17 +26,17 @@ void adjust_scroll(int total_items, int visible_lines,
     // 1. 边界安全限制
     if (*selected < 0) *selected = 0;
     if (*selected >= total_items) *selected = total_items - 1;
-    
+
     // 2. 如果选中行跑到视口上方去了，把视口往上拉
     if (*selected < *scroll_offset) {
         *scroll_offset = *selected;
     }
-    
+
     // 3. 如果选中行跑到视口下方去了，把视口往下拉
     if (*selected >= *scroll_offset + visible_lines) {
         *scroll_offset = *selected - visible_lines + 1;
     }
-    
+
     // 4. 视口本身的边界限制
     if (*scroll_offset < 0) *scroll_offset = 0;
     if (total_items > visible_lines) {
@@ -57,6 +59,9 @@ void Collector(){
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
+
+
+
 
 //UI线程，每隔200ms读取一次数据并且刷新显示
 void Display(){
@@ -83,9 +88,13 @@ void Display(){
 
     int selected = 0;//当前选择行
     int running = 1; //是否正在运行
-    int scroll_offset = 0; 
+    int scroll_offset = 0;//滚动页面偏移
+
+    int signal_sel = 0;//信号选中光标
+    AppState state = AppState::NORMAL; 
+
     halfdelay(5);//按键等待0.5s
-    
+
     refresh();//刷新整个页面，这样下面的窗口刷新才能生效
     while(running){
         //清空窗口
@@ -98,7 +107,7 @@ void Display(){
         std::vector<std::string> systemInfo = {"Linux Ubuntu22.04"}; //模拟系统数据TODO
         std::vector<std::string> info = s.Utilization();//进程数，运行数，阻塞数
         std::vector<Process> procs = s.Processes();//进程数组, pid ppid status CPU cmd 
-        //s.getCPU()可以获得总统CPU使用率
+                                                   //s.getCPU()可以获得总统CPU使用率
         double CPU_utili = s.getCPU();
         s.unlock();
 
@@ -111,30 +120,65 @@ void Display(){
         draw_processes(win_body, procs, procs.size(), selected, scroll_offset, max_y - 8, max_x);
         draw_footer(win_footer, max_x);
 
+        //如果是信号发送状态，要绘制信号窗口
+        if(state == AppState::SEND_SIGNAL){
+            draw_signal_menu(win_body, signal_sel, max_y, max_x);
+        }
+
         //刷新所有窗口
         wrefresh(win_header);
         wrefresh(win_body);
         wrefresh(win_footer);
 
         int ch = getch();
-        switch(ch){
-        case 'q':
-            running = 0;
-            break;
-        case KEY_UP:
-            selected--;
-            adjust_scroll(procs.size(), max_y - 8 - 2, &selected, &scroll_offset);
-            break;
-        case KEY_DOWN:
-            selected++;
-            adjust_scroll(procs.size(), max_y - 8 - 2, &selected, &scroll_offset);
-            break;
-        case 'k':
-            //TODO
-            break;
-        case ERR:
-            break;
+
+        //判断当前状态        
+        if(state == AppState::NORMAL){
+            switch(ch){
+            case 'q':
+                running = 0;
+                break;
+            case KEY_UP:
+                selected--;
+                adjust_scroll(procs.size(), max_y - 8 - 2, &selected, &scroll_offset);
+                break;
+            case KEY_DOWN:
+                selected++;
+                adjust_scroll(procs.size(), max_y - 8 - 2, &selected, &scroll_offset);
+                break;
+            case 'k':
+                kill(stoi(procs[selected].Pid()), SIGKILL);
+                break;
+            case 's':
+                state = AppState::SEND_SIGNAL;
+                signal_sel = 0;
+                break;
+            case ERR:
+                break;
+            }
+        }else if(state == AppState::SEND_SIGNAL){
+            switch(ch){
+            case KEY_UP:
+                signal_sel--;
+                if(signal_sel < 0) signal_sel = 0;
+                break;
+            case KEY_DOWN:
+                signal_sel++;
+                if(signal_sel >= (int)signal_options.size()) signal_sel = signal_options.size() - 1;
+                break;
+            case 10: //这个是回车键
+                if(!procs.empty() && selected < procs.size()){
+                    kill(stoi(procs[selected].Pid()), signal_options[signal_sel].sig);
+                    state = AppState::NORMAL;
+                }
+                break;
+            case 'q':
+                state = AppState::NORMAL;
+                break;
+            }
         }
+
+
     }
 
     //清理
@@ -142,36 +186,6 @@ void Display(){
     delwin(win_body);
     delwin(win_footer);
     endwin();
-#if 0
-    while(true){
-        if(flag){
-            break;
-        }
-        std::vector<std::string> info = s.Utilization();
-        std::vector<Process> procs = s.Processes();
-        std::sort(procs.begin(), procs.end(), [](const Process& l, const Process& r)->bool{ 
-            if(l.getCpu() == r.getCpu()){
-                return l.Pid() < r.Pid();
-            }
-            return l.getCpu() > r.getCpu(); 
-        });
-        printf("\033[H");
-        printf("\033[J");
-
-        printf("CPU Utilization rate: %.2lf%%\n", s.getCPU());
-        printf("Processes: %s | running process: %s | blocked process: %s\n", info[0].c_str(), info[1].c_str(), info[2].c_str());
-        for(int i=0;i < std::min((int)procs.size(), 5);i++){
-            printf("pid: %s   ppid: %s   status: %s   CPU: %.2lf%%   CMD: %s\n", procs[i].Pid().c_str(),
-                                                                                 procs[i].Ppid().c_str(),
-                                                                                 procs[i].Status().c_str(),
-                                                                                 procs[i].getCpu(),
-                                                                                 procs[i].Command().c_str());
-        }
-
-        fflush(stdout);
-        sleep(1);
-    }
-#endif
 }
 
 int main()

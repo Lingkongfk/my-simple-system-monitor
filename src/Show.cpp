@@ -2,7 +2,6 @@
 #include "Process.h"
 #include <ncurses.h>
 
-
 // ===== 初始化颜色 =====
 void init_colors(void)
 {
@@ -120,11 +119,50 @@ void draw_footer(WINDOW *win, int max_x)
     wattron(win, COLOR_PAIR(4));
     for (int i = 0; i < max_x; i++) mvwaddch(win, 0, i, ' ');
     mvwprintw(win, 0, 1, 
-        " F9:Kill  q:Quit  ↑↓:Navigate ");
+        " k:Kill  q:Quit  s:send signal to process  ↑↓:Navigate ");
     wattroff(win, COLOR_PAIR(4));
     
     wattron(win, COLOR_PAIR(4));
     for (int i = 0; i < max_x; i++) mvwaddch(win, 1, i, ' ');
     mvwprintw(win, 1, 1, " Sort: CPU%% | PID  (press s to change sort)");
     wattroff(win, COLOR_PAIR(4));
+}
+
+
+//绘制信号选中悬浮窗
+void draw_signal_menu(WINDOW* win, int signal_sel, int max_y, int max_x){
+
+    //菜单高度，加上上下边框
+    int menu_h = signal_options.size() + 2;
+    int menu_w = 30;
+
+    //计算当前窗口的中间位置
+    int start_y = (max_y - menu_h) / 2;
+    int start_x = (max_x - menu_w) / 2;
+
+    //绘制边框
+    wattron(win, COLOR_PAIR(4));
+    box(win, 0, 0);
+
+    //绘制标题
+    mvwprintw(win, start_y, start_x + 2, " Send Signal ");
+
+    //绘制信号的选项
+    for(int i=0; i < (int)signal_options.size(); i++){
+        if(i == signal_sel){
+            wattron(win, COLOR_PAIR(5));//高亮反光
+            //覆盖窗口下方的元素
+            for(int j=1;j<menu_w -1;j++){
+                mvwaddch(win, start_y + 1 + i, start_x + j, ' ');
+            }
+            mvwprintw(win, start_y+1+i, start_x+2, " > %s", signal_options[i].name.c_str());
+            wattroff(win, COLOR_PAIR(5));
+        }else{
+            wattron(win, COLOR_PAIR(6));
+            mvwprintw(win, start_y+1+i, start_x+2, " > %s", signal_options[i].name.c_str());
+            wattroff(win, COLOR_PAIR(6));
+        }
+    }
+
+    wattroff(win, COLOR_PAIR(5));
 }
