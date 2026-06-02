@@ -19,6 +19,12 @@
 System s;
 std::atomic_bool flag;//判断是否退出
 
+enum class SORT_BY{
+    BY_CPU,
+    BY_PID
+};
+
+
 //实现滚轮滑动窗口  //总数量，    视野显示数量， 当前选中， 偏移
 void adjust_scroll(int total_items, int visible_lines, 
                    int *selected, int *scroll_offset)
@@ -93,6 +99,34 @@ void Display(){
     int signal_sel = 0;//信号选中光标
     AppState state = AppState::NORMAL; 
 
+    //排序状态
+    bool desc = false; // 降序是false
+    SORT_BY now_by = SORT_BY::BY_PID;
+
+    auto sort_by_string = [](const std::string& l, const std::string& r)->bool{
+        if(l.size() != r.size()){
+            return l.size() < r.size();
+        }
+        for(int i=0;i<l.size();i++){
+            if(l[i] != r[i]){
+                return l[i] < r[i];
+            }
+        }
+        return true;
+    };
+    auto sort_by_string_desc = [](const std::string& l, const std::string& r)->bool{
+        if(l.size() != r.size()){
+            return l.size() > r.size();
+        }
+        for(int i=0;i<l.size();i++){
+            if(l[i] != r[i]){
+                return l[i] > r[i];
+            }
+        }
+        return true;
+    };
+
+
     halfdelay(5);//按键等待0.5s
 
     refresh();//刷新整个页面，这样下面的窗口刷新才能生效
@@ -110,6 +144,30 @@ void Display(){
                                                    //s.getCPU()可以获得总统CPU使用率
         double CPU_utili = s.getCPU();
         s.unlock();
+
+
+        //按照cpu排序
+        if(now_by == SORT_BY::BY_CPU){
+            if(desc){//降序
+                sort(procs.begin(), procs.end(), [](const Process& l, const Process& r)->bool{
+                    return l.getCpu() > r.getCpu();
+                });
+            }else{
+                sort(procs.begin(), procs.end(), [](const Process& l, const Process& r)->bool{
+                    return l.getCpu() < r.getCpu();
+                });
+            }
+        }else if(now_by == SORT_BY::BY_PID){
+            if(desc){
+                sort(procs.begin(), procs.end(), [&](const Process& l, const Process& r)->bool{
+                    return sort_by_string_desc(l.Pid(), r.Pid());
+                });
+            }else{
+                sort(procs.begin(), procs.end(), [&](const Process& l, const Process& r)->bool{
+                    return sort_by_string(l.Pid(), r.Pid());    
+                });
+            }
+        }
 
         //对数据进程处理
         if(info.size() < 3){
@@ -152,6 +210,19 @@ void Display(){
             case 's':
                 state = AppState::SEND_SIGNAL;
                 signal_sel = 0;
+                break;
+            case 'c':
+                now_by = SORT_BY::BY_CPU;
+                break;
+            case 'p':
+                now_by = SORT_BY::BY_PID;
+                break;
+            case 'd':
+                if(desc){
+                    desc = false;
+                }else{
+                    desc = true;
+                }
                 break;
             case ERR:
                 break;

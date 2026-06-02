@@ -124,7 +124,7 @@ void draw_footer(WINDOW *win, int max_x)
     
     wattron(win, COLOR_PAIR(4));
     for (int i = 0; i < max_x; i++) mvwaddch(win, 1, i, ' ');
-    mvwprintw(win, 1, 1, " Sort: CPU%% | PID  (press s to change sort)");
+    mvwprintw(win, 1, 1, " Sort CPU%%: c | PID: p | desc: d ");
     wattroff(win, COLOR_PAIR(4));
 }
 
