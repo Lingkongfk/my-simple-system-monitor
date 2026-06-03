@@ -1,4 +1,5 @@
 #include "System.h"
+#include "LinuxParser.h"
 #include <chrono>
 #include <cstdio>
 #include <mutex>
@@ -61,13 +62,20 @@ void System::Update(){
         temp_processes[i].setCpu((procTime2 - procTime[i]) / (100 * (t2 - t1)) * 100);
     }
 
+    std::vector<std::string> meminfo = LinuxParser::MemoryUtilization();
+    std::string kernel = LinuxParser::Kernel();
+    std::string os_releas = LinuxParser::OperatingSystem();
+
 
     //最后上锁数据更新
     {
         std::unique_lock<std::mutex> lock(mtx_);
-        utilization_ = temp_utilization;
-        processes_ = temp_processes;
-        CPUused = temp_CPUused;
+        utilization_ = std::move(temp_utilization);
+        processes_ = std::move(temp_processes);
+        CPUused = std::move(temp_CPUused);
+        meminfo_ = std::move(meminfo);
+        kernel_ = std::move(kernel);
+        os_release_ = std::move(os_releas);
     }
 }
 std::vector<std::string> System::Utilization(){
@@ -79,4 +87,16 @@ std::vector<Process> System::Processes(){
 
 double System::getCPU(){
     return CPUused;
+}
+
+std::vector<std::string> System::meminfo(){
+    return meminfo_;
+}
+
+std::string System::Kernel(){
+    return kernel_;
+}
+
+std::string System::os_release(){
+    return os_release_;
 }

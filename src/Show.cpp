@@ -30,8 +30,9 @@ void draw_bar(WINDOW* win, int y, int x, int width, float percent, int color_pai
 }  
 
 //                      窗口     宽度                             系统信息    进程信息    cpu占用
-void draw_header(WINDOW *win, int max_x,  std::vector<std::string>& systemInfo, 
- std::vector<std::string>& processInfo, double cpuInfo)
+void draw_header(WINDOW *win, int max_x,  std::vector<std::string>& meminfo, 
+                 std::string kernel, std::string os_release,
+ std::vector<std::string>& processInfo, double cpuInfo, long long uptime)
 {
     // 蓝色标题栏背景
     wattron(win, COLOR_PAIR(4));
@@ -41,8 +42,12 @@ void draw_header(WINDOW *win, int max_x,  std::vector<std::string>& systemInfo,
 
     // 系统信息
     float cpu_pct = cpuInfo;
-    float mem_pct = 62.3f;//TODO
-    float swp_pct = 12.1f;//TODO
+    float mem_pct = 0;
+    float swp_pct = 0;
+    if(meminfo[0] != "N/A"){
+        mem_pct = stod(meminfo[2]);
+        swp_pct = stod(meminfo[5]);
+    }
     int bar_w = max_x - 30;
     if (bar_w > 40) bar_w = 40;
     if (bar_w < 5) bar_w = 5;
@@ -52,24 +57,26 @@ void draw_header(WINDOW *win, int max_x,  std::vector<std::string>& systemInfo,
     int mem_color = mem_pct < 50 ? 1 : (mem_pct < 80 ? 2 : 3);
     int swp_color = swp_pct < 50 ? 1 : (swp_pct < 80 ? 2 : 3);
 
-    mvwprintw(win, 1, 2, "CPU[");
-    draw_bar(win, 1, 6, bar_w, cpu_pct, cpu_color);
-    mvwprintw(win, 1, 6 + bar_w, "]%5.1f%%", cpu_pct);
+    mvwprintw(win, 3, 2, "CPU[");
+    draw_bar(win, 3, 6, bar_w, cpu_pct, cpu_color);
+    mvwprintw(win, 3, 6 + bar_w, "]%5.1f%%", cpu_pct);
 
-    mvwprintw(win, 2, 2, "MEM[");
-    draw_bar(win, 2, 6, bar_w, mem_pct, mem_color);
-    mvwprintw(win, 2, 6 + bar_w, "]%5.1f%%", mem_pct);
+    mvwprintw(win, 4, 2, "MEM[");
+    draw_bar(win, 4, 6, bar_w, mem_pct, mem_color);
+    mvwprintw(win, 4, 6 + bar_w, "]%5.1f%%", mem_pct);
 
-    mvwprintw(win, 3, 2, "SWP[");
-    draw_bar(win, 3, 6, bar_w, swp_pct, swp_color);
-    mvwprintw(win, 3, 6 + bar_w, "]%5.1f%%", swp_pct);
+    mvwprintw(win, 5, 2, "SWP[");
+    draw_bar(win, 5, 6, bar_w, swp_pct, swp_color);
+    mvwprintw(win, 5, 6 + bar_w, "]%5.1f%%", swp_pct);
 
     wattron(win, COLOR_PAIR(6));
-    mvwprintw(win, 1, 6 + bar_w + 10, "System: %s", systemInfo[0].c_str());
-    mvwprintw(win, 2, 6 + bar_w + 10, "process total: %s  running: %s  sleep: %s", processInfo[0].c_str(), 
+    mvwprintw(win, 1, 2, "System: Linux %s  %s", kernel.c_str(), os_release.c_str());
+    mvwprintw(win, 2, 2, "process total: %s  running: %s  sleep: %s", processInfo[0].c_str(), 
                                                                                    processInfo[1].c_str(), 
                                                                                    processInfo[2].c_str());
-    mvwprintw(win, 3, 6 + bar_w + 10, "Uptime: 3d 14h 22m");//TODO
+    mvwprintw(win, 3, 6 + bar_w + 10, "Uptime: %lldday %lldh %lldm", uptime / 86400, uptime % 86400 / 3600, uptime % 3600 / 60);//
+    mvwprintw(win, 4, 6 + bar_w + 10, "memory total: %s  available: %s", meminfo[0].c_str(), meminfo[1].c_str());
+    mvwprintw(win, 5, 6 + bar_w + 10, "swap total: %s  free: %s", meminfo[3].c_str(), meminfo[4].c_str());
     wattroff(win, COLOR_PAIR(6));
 }
 
@@ -82,8 +89,8 @@ void draw_processes(WINDOW *win, std::vector<Process>& procs, int count,
 
     // 列标题
     wattron(win, COLOR_PAIR(4));
-    for (int i = 1; i < max_x - 1; i++) mvwaddch(win, 1, i, ' ');
-    mvwprintw(win, 1, 2, "  PID       PPID  CPU%%  STATUS  COMMAND");
+    for (int i = 0; i < max_x - 1; i++) mvwaddch(win, 0, i, ' ');
+    mvwprintw(win, 0, 2, "  PID       PPID  CPU%%  STATUS  COMMAND");
     wattroff(win, COLOR_PAIR(4));
 
     // 进程行
@@ -95,10 +102,10 @@ void draw_processes(WINDOW *win, std::vector<Process>& procs, int count,
         if (data_idx == selected) {
             // 选中行 - 高亮反色
             wattron(win, COLOR_PAIR(5));
-            for (int c = 1; c < max_x - 1; c++) mvwaddch(win, row, c, ' ');
+            for (int c = 1; c < max_x - 1; c++) mvwaddch(win, row - 1, c, ' ');
         }
 
-        mvwprintw(win, row, 2, "%5s  %8s  %5.2f   %s  %s",
+        mvwprintw(win, row - 1, 2, "%5s  %8s  %5.2f   %s  %s",
                   procs[data_idx].Pid().c_str(),
                   procs[data_idx].Ppid().c_str(),
                   procs[data_idx].getCpu(),

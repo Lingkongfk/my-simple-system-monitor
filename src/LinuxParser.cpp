@@ -5,14 +5,58 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+
+//返回发行版信息
 std::string LinuxParser::OperatingSystem(){
-    return "/etc/os-release";
+    std::fstream file("/etc/os-release", std::ios::in);
+    if(!file.is_open()){
+        fprintf(stderr, "file /etc/os-release open failed\n");
+        return "";
+    }
+    std::string line;
+    std::getline(file, line);
+    std::string word;
+    int idx = 0;
+    for(int i=0;i<line.size();i++){
+        if(line[i] == '"'){
+            idx = i;
+            break;
+        }
+    }
+    //如果idx = 0说明没有该信息
+    if(idx == 0){
+        file.close();
+        return word;
+    }
+    int n = line.size();
+
+    word = line.substr(idx + 1, n - idx - 2);
+    file.close();
+    return word;
+
 }
 
 // System
-
+//返回内核版本信息
 std::string LinuxParser::Kernel(){
-    return "/proc/version";
+    std::fstream file("/proc/version", std::ios::in);
+    if(!file.is_open()){
+        fprintf(stderr,"file /proc/version open failed\n");
+        return "";
+    }
+    std::string line;
+    std::getline(file, line);
+    std::stringstream ss(line);
+    std::string word;
+    int cnt = 0;
+    while(ss >> word){
+        if(cnt == 2){ 
+            break;
+        }
+        cnt++;
+    }
+    file.close();
+    return word;
 }
 
 // CPU
@@ -20,7 +64,7 @@ std::vector<std::string> LinuxParser::CpuUtilization(){
     std::vector<std::string> ans;
     std::fstream file("/proc/stat", std::ios::in);
     if(!file.is_open()){
-        printf("file /proc/stat open failed\n");
+        fprintf(stderr,"file /proc/stat open failed\n");
         return ans;
     }
 
@@ -63,39 +107,71 @@ std::vector<std::string> LinuxParser::CpuUtilization(){
     return ans;
 }
 
-// Memory
-double LinuxParser::MemoryUtilization(){
+// Memory 总内存，可使用内存，内存使用率， 总交换内存， 空闲交换内存， swap分区占用率
+std::vector<std::string> LinuxParser::MemoryUtilization(){
+    std::vector<std::string> ret;
     std::fstream file("/proc/meminfo", std::ios::in);
     if(!file.is_open()){
-        printf("file /proc/meminfo open failed\n");
-        return 0;
+        fprintf(stderr,"file /proc/meminfo open failed\n");
+        return ret;
     }
 
     double ans = 0;
 
+    //总内存
     std::string line;
     std::getline(file, line);
     std::stringstream ss(line);
     std::string word1, word2;
     ss >> word1 >> word2;
     ans += stod(word2);
+    ret.push_back(word2);
 
-    for(int i=0;i<5;i++){
+    //可使用内存
+    std::getline(file, line);
+    std::getline(file, line);
+    ss.clear();
+    ss.str("");
+    ss.str(line);
+    ss >> word1 >> word2;
+    ret.push_back(word2);
+
+    //内存使用率
+    ans = (ans - stod(word2)) / ans;
+    ret.push_back(std::to_string(ans));
+
+    //总交换内存
+    for(int i=0;i<11;i++){
         std::getline(file, line);
     }
-
     std::getline(file, line);
-    std::stringstream ss1(line);
+    ss.clear();
+    ss.str("");
+    ss.str(line);
     ss >> word1 >> word2;
-    ans = (ans / stod(word2));
-    return ans;
+    ret.push_back(word2);
+    double tmp = stod(word2);
+
+    //空闲交换内存
+    std::getline(file, line);
+    ss.clear();
+    ss.str("");
+    ss.str(line);
+    ss >> word1 >> word2;
+    ret.push_back(word2);
+
+    tmp = (tmp - stod(word2)) / tmp;
+    ret.push_back(std::to_string(tmp));
+
+    file.close();
+    return ret;
 }
 
 // Uptime
 long long LinuxParser::UpTime(){
     std::fstream file("/proc/uptime", std::ios::in);
     if(!file.is_open()){
-        printf("file /proc/uptime open failed\n");
+        fprintf(stderr,"file /proc/uptime open failed\n");
         return 0;
     }
     std::string str;
@@ -105,7 +181,7 @@ long long LinuxParser::UpTime(){
         i++;
     }
     std::string ans = str.substr(0, i);
-    return stod(ans);
+    return stol(ans);
 
 }
 
@@ -114,7 +190,7 @@ std::vector<std::string> LinuxParser::Pids(){
     std::vector<std::string> vec;
     DIR* dir = opendir("/proc");
     if(dir == nullptr){
-        printf("open /proc failed\n");
+        fprintf(stderr,"open /proc failed\n");
         return vec;
     }
 
@@ -141,7 +217,7 @@ double LinuxParser::CpuUtilizationOfProcess(std::string& pid){
 
     std::fstream file(allPath, std::ios::in);
     if(!file.is_open()){
-        printf("pid:%s stat time info file failed\n", pid.c_str());
+        fprintf(stderr,"pid:%s stat time info file failed\n", pid.c_str());
         return 0;
     }
     std::getline(file, line);
@@ -169,7 +245,7 @@ std::vector<std::string> LinuxParser::getProcessInfo(std::string& pid){
 
     std::fstream file(allPath, std::ios::in);
     if(!file.is_open()){
-        printf("open pid:%s stat file failed\n", pid.c_str());
+        fprintf(stderr,"open pid:%s stat file failed\n", pid.c_str());
         return ans;
     }
     std::getline(file, line);
@@ -190,7 +266,7 @@ std::vector<std::string> LinuxParser::getProcessInfo(std::string& pid){
 
     file.open(allPath, std::ios::in);
     if(!file.is_open()){
-        printf("open pid:%s status file failed\n", pid.c_str());
+        fprintf(stderr,"open pid:%s status file failed\n", pid.c_str());
         return ans;
     }
 

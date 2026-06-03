@@ -1,5 +1,6 @@
 #include <chrono>
 #include <iostream>
+#include "LinuxParser.h"
 #include "Process.h"
 #include "System.h"
 #include <algorithm>
@@ -88,8 +89,8 @@ void Display(){
     getmaxyx(stdscr, max_y, max_x);
 
     //创建三个窗口
-    WINDOW* win_header = newwin(5, max_x, 0, 0);//最上面5行
-    WINDOW* win_body= newwin(max_y - 8, max_x, 5, 0);//中间所有
+    WINDOW* win_header = newwin(6, max_x, 0, 0);//最上面5行
+    WINDOW* win_body= newwin(max_y - 9, max_x, 6, 0);//中间所有
     WINDOW* win_footer= newwin(3, max_x, max_y - 3, 0);//最下面三行
 
     int selected = 0;//当前选择行
@@ -138,13 +139,14 @@ void Display(){
 
         //获取数据
         s.lock(); 
-        std::vector<std::string> systemInfo = {"Linux Ubuntu22.04"}; //模拟系统数据TODO
-        std::vector<std::string> info = s.Utilization();//进程数，运行数，阻塞数
-        std::vector<Process> procs = s.Processes();//进程数组, pid ppid status CPU cmd 
-                                                   //s.getCPU()可以获得总统CPU使用率
-        double CPU_utili = s.getCPU();
+        std::vector<std::string> meminfo = std::move(s.meminfo());
+        std::string kernel = std::move(s.Kernel());
+        std::string os_release = std::move(s.os_release());
+        std::vector<std::string> info = std::move(s.Utilization());//进程数，运行数，阻塞数
+        std::vector<Process> procs = std::move(s.Processes());//进程数组, pid ppid status CPU cmd 
+        double CPU_utili = s.getCPU();//s.getCPU()可以获得总统CPU使用率
         s.unlock();
-
+        long long uptime = LinuxParser::UpTime();
 
         //按照cpu排序
         if(now_by == SORT_BY::BY_CPU){
@@ -173,8 +175,12 @@ void Display(){
         if(info.size() < 3){
             info.resize(3, "N/A");
         }
+        if(meminfo.size() < 6){
+            meminfo.resize(6, "N/A");
+        }
+
         //利用获取的数据进行绘制
-        draw_header(win_header, max_x, systemInfo, info, CPU_utili);
+        draw_header(win_header, max_x, meminfo, kernel, os_release, info, CPU_utili, uptime);
         draw_processes(win_body, procs, procs.size(), selected, scroll_offset, max_y - 8, max_x);
         draw_footer(win_footer, max_x);
 

@@ -18,7 +18,7 @@ public:
     static std::vector<std::string> CpuUtilization(); //读取/proc/stat 返回拆分好的字段,具体字段后续确认
 
     //Memory
-    static double MemoryUtilization();  //返回0 ~ 1 的内存使用比例
+    static std::vector<std::string> MemoryUtilization();  //返回0 ~ 1 的内存使用比例
 
     //Uptime, 系统运行时间
     static long long UpTime();   // /proc/uptime
