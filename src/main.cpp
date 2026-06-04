@@ -68,6 +68,34 @@ void Collector(){
 }
 
 
+void sortByField(std::vector<Process>& procs, SORT_BY now_by, bool desc){
+    //比较字符串
+    auto cmpString = [](const std::string& l, const std::string& r)->bool{
+        if(l.size() != r.size()){
+            return l.size() < r.size();
+        }
+        for(int i=0;i<l.size();i++){
+            if(l[i]!=r[i]){
+                return l[i] < r[i];
+            }
+        }
+        return true;
+    };
+
+    if(desc){
+        sort(procs.begin(), procs.end(), [now_by, cmpString](const Process& l, const Process& r)->bool{
+            if(now_by == SORT_BY::BY_CPU) return l.getCpu() > r.getCpu();
+            else if(now_by == SORT_BY::BY_PID) return cmpString(r.Pid(), l.Pid()); 
+            else return true;
+        });
+    }else{
+        sort(procs.begin(), procs.end(), [now_by, cmpString](const Process& l, const Process& r)->bool{
+            if(now_by == SORT_BY::BY_CPU) return l.getCpu() < r.getCpu();
+            else if(now_by == SORT_BY::BY_PID) return cmpString(l.Pid(), r.Pid()); 
+            else return true;
+        });
+    }
+}
 
 
 //UI线程，每隔200ms读取一次数据并且刷新显示
@@ -104,30 +132,6 @@ void Display(){
     bool desc = false; // 降序是false
     SORT_BY now_by = SORT_BY::BY_PID;
 
-    auto sort_by_string = [](const std::string& l, const std::string& r)->bool{
-        if(l.size() != r.size()){
-            return l.size() < r.size();
-        }
-        for(int i=0;i<l.size();i++){
-            if(l[i] != r[i]){
-                return l[i] < r[i];
-            }
-        }
-        return true;
-    };
-    auto sort_by_string_desc = [](const std::string& l, const std::string& r)->bool{
-        if(l.size() != r.size()){
-            return l.size() > r.size();
-        }
-        for(int i=0;i<l.size();i++){
-            if(l[i] != r[i]){
-                return l[i] > r[i];
-            }
-        }
-        return true;
-    };
-
-
     halfdelay(5);//按键等待0.5s
 
     refresh();//刷新整个页面，这样下面的窗口刷新才能生效
@@ -149,28 +153,8 @@ void Display(){
         long long uptime = LinuxParser::UpTime();
 
         //按照cpu排序
-        if(now_by == SORT_BY::BY_CPU){
-            if(desc){//降序
-                sort(procs.begin(), procs.end(), [](const Process& l, const Process& r)->bool{
-                    return l.getCpu() > r.getCpu();
-                });
-            }else{
-                sort(procs.begin(), procs.end(), [](const Process& l, const Process& r)->bool{
-                    return l.getCpu() < r.getCpu();
-                });
-            }
-        }else if(now_by == SORT_BY::BY_PID){
-            if(desc){
-                sort(procs.begin(), procs.end(), [&](const Process& l, const Process& r)->bool{
-                    return sort_by_string_desc(l.Pid(), r.Pid());
-                });
-            }else{
-                sort(procs.begin(), procs.end(), [&](const Process& l, const Process& r)->bool{
-                    return sort_by_string(l.Pid(), r.Pid());    
-                });
-            }
-        }
-
+        sortByField(procs, now_by, desc);
+        
         //对数据进程处理
         if(info.size() < 3){
             info.resize(3, "N/A");
