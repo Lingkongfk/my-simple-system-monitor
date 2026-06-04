@@ -4,11 +4,13 @@
 #include <cstdio>
 #include <mutex>
 #include <string>
+#include <sys/unistd.h>
 #include <thread>
 #include <cmath>
 #include <type_traits>
 #include <vector>
 #include <utility>
+#include <climits>
 
 //得到单调递增的精确时间
 double getMonotonicTime(){
@@ -25,7 +27,8 @@ void System::Update(){
     std::vector<std::string> cpuinfo = LinuxParser::CpuUtilization();
     double idle1 = stod(cpuinfo[0]);
     double total1 = stod(cpuinfo[1]);
-   
+    
+    
     std::vector<std::string> temp_utilization;
     temp_utilization.push_back(cpuinfo[2]);
     temp_utilization.push_back(cpuinfo[3]);
@@ -65,7 +68,15 @@ void System::Update(){
     std::vector<std::string> meminfo = LinuxParser::MemoryUtilization();
     std::string kernel = LinuxParser::Kernel();
     std::string os_releas = LinuxParser::OperatingSystem();
-
+    double totalMem = INT_MAX;
+    if(meminfo.size() > 0){
+        totalMem = stod(meminfo[0]);
+    }
+    for(int i=0;i<temp_processes.size();i++){
+        double rss = temp_processes[i].MemUtilization();
+        double rss_kb = rss * sysconf(_SC_PAGESIZE) / 1024;
+        temp_processes[i].setMem(rss_kb / totalMem );
+    }
 
     //最后上锁数据更新
     {
@@ -76,6 +87,7 @@ void System::Update(){
         meminfo_ = std::move(meminfo);
         kernel_ = std::move(kernel);
         os_release_ = std::move(os_releas);
+        
     }
 }
 std::vector<std::string> System::Utilization(){

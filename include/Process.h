@@ -14,13 +14,18 @@ public:
     std::string Status()const;//获取进程状态
     bool setInfo();//设置基本信息
     void setCpu(double num);
+    void setMem(double num);
     double getCpu()const;
+    double getMem()const;
     double CpuUtilization();//采样cpu占用
+    double MemUtilization();//采样mem占用
 private:
     std::string pid_;
     //进程的基本信息, 命令名, 进程状态，ppid
     std::vector<std::string> procInfo_;
     //CPU占用率
     double cpuUtilization_;
+    //内存占用率
+    double memUtilization_;
 };
 

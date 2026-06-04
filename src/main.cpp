@@ -22,7 +22,8 @@ std::atomic_bool flag;//判断是否退出
 
 enum class SORT_BY{
     BY_CPU,
-    BY_PID
+    BY_PID,
+    BY_MEM
 };
 
 
@@ -86,12 +87,14 @@ void sortByField(std::vector<Process>& procs, SORT_BY now_by, bool desc){
         sort(procs.begin(), procs.end(), [now_by, cmpString](const Process& l, const Process& r)->bool{
             if(now_by == SORT_BY::BY_CPU) return l.getCpu() > r.getCpu();
             else if(now_by == SORT_BY::BY_PID) return cmpString(r.Pid(), l.Pid()); 
+            else if(now_by == SORT_BY::BY_MEM) return l.getMem() > r.getMem(); 
             else return true;
         });
     }else{
         sort(procs.begin(), procs.end(), [now_by, cmpString](const Process& l, const Process& r)->bool{
             if(now_by == SORT_BY::BY_CPU) return l.getCpu() < r.getCpu();
             else if(now_by == SORT_BY::BY_PID) return cmpString(l.Pid(), r.Pid()); 
+            else if(now_by == SORT_BY::BY_MEM) return l.getMem() < r.getMem(); 
             else return true;
         });
     }
@@ -206,6 +209,9 @@ void Display(){
                 break;
             case 'p':
                 now_by = SORT_BY::BY_PID;
+                break;
+            case 'm':
+                now_by = SORT_BY::BY_MEM;
                 break;
             case 'd':
                 if(desc){

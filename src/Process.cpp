@@ -25,11 +25,20 @@ bool Process::setInfo(){
 double Process::CpuUtilization(){
     return LinuxParser::CpuUtilizationOfProcess(pid_);
 }
+double Process::MemUtilization(){
+    return LinuxParser::MemUtilizationOfProcess(pid_);
+}
 void Process::setCpu(double num){
     cpuUtilization_ = num;
+}
+void Process::setMem(double num){
+    memUtilization_ = num;
 }
 
 double Process::getCpu()const{
     return cpuUtilization_;
 }
 
+double Process::getMem()const{
+    return memUtilization_;
+}

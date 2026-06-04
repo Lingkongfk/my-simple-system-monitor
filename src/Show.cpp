@@ -90,7 +90,7 @@ void draw_processes(WINDOW *win, std::vector<Process>& procs, int count,
     // 列标题
     wattron(win, COLOR_PAIR(4));
     for (int i = 0; i < max_x - 1; i++) mvwaddch(win, 0, i, ' ');
-    mvwprintw(win, 0, 2, "  PID       PPID  CPU%%  STATUS  COMMAND");
+    mvwprintw(win, 0, 2, "  PID       PPID  CPU%%    MEM%%  STATUS  COMMAND");
     wattroff(win, COLOR_PAIR(4));
 
     // 进程行
@@ -105,10 +105,11 @@ void draw_processes(WINDOW *win, std::vector<Process>& procs, int count,
             for (int c = 1; c < max_x - 1; c++) mvwaddch(win, row - 1, c, ' ');
         }
 
-        mvwprintw(win, row - 1, 2, "%5s  %8s  %5.2f   %s  %s",
+        mvwprintw(win, row - 1, 2, "%5s  %8s  %5.2f   %5.2f    %s    %s",
                   procs[data_idx].Pid().c_str(),
                   procs[data_idx].Ppid().c_str(),
                   procs[data_idx].getCpu(),
+                  procs[data_idx].getMem(),
                   procs[data_idx].Status().c_str(),
                   procs[data_idx].Command().c_str());
 
@@ -131,7 +132,7 @@ void draw_footer(WINDOW *win, int max_x)
     
     wattron(win, COLOR_PAIR(4));
     for (int i = 0; i < max_x; i++) mvwaddch(win, 1, i, ' ');
-    mvwprintw(win, 1, 1, " Sort CPU%%: c | PID: p | desc: d ");
+    mvwprintw(win, 1, 1, " Sort CPU%%: c | PID: p | MEM: m | desc: d ");
     wattroff(win, COLOR_PAIR(4));
 }
 

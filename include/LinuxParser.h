@@ -26,6 +26,7 @@ public:
     //Process
     static std::vector<std::string> Pids();                 //返回/proc下所有进程的pid
     static double CpuUtilizationOfProcess(std::string& pid);//读取 /proc/[pid]/stat  计算该进程的CPU占用率
+    static double MemUtilizationOfProcess(std::string& pid);
     static std::vector<std::string> getProcessInfo(std::string& pid); //得到对应进程的相关信息
 };
 
