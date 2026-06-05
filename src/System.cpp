@@ -46,7 +46,7 @@ void System::Update(){
         if(p.setInfo()){
             temp_processes.push_back(std::move(p));
             //开启采样
-            procTime.push_back(temp_processes[i].CpuUtilization());
+            procTime.push_back(temp_processes.back().CpuUtilization());
         }
     }
 
@@ -75,14 +75,15 @@ void System::Update(){
     for(int i=0;i<temp_processes.size();i++){
         double rss = temp_processes[i].MemUtilization();
         double rss_kb = rss * sysconf(_SC_PAGESIZE) / 1024;
-        temp_processes[i].setMem(rss_kb / totalMem );
+        temp_processes[i].setMem(rss_kb / totalMem * 100);
     }
+    processes_back_ = std::move(temp_processes);
 
     //最后上锁数据更新
     {
         std::unique_lock<std::mutex> lock(mtx_);
         utilization_ = std::move(temp_utilization);
-        processes_ = std::move(temp_processes);
+        std::swap(processes_, processes_back_);
         CPUused = std::move(temp_CPUused);
         meminfo_ = std::move(meminfo);
         kernel_ = std::move(kernel);
@@ -90,10 +91,12 @@ void System::Update(){
         
     }
 }
-std::vector<std::string> System::Utilization(){
-    return utilization_;
+std::vector<std::string>&& System::Utilization()&&{
+    return std::move(utilization_);
 }
-std::vector<Process> System::Processes(){
+
+//提供给UI
+std::vector<Process>& System::Processes(){
     return processes_;
 }
 
@@ -101,8 +104,8 @@ double System::getCPU(){
     return CPUused;
 }
 
-std::vector<std::string> System::meminfo(){
-    return meminfo_;
+std::vector<std::string>&& System::meminfo()&&{
+    return std::move(meminfo_);
 }
 
 std::string System::Kernel(){

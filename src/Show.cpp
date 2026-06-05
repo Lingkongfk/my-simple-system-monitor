@@ -45,8 +45,8 @@ void draw_header(WINDOW *win, int max_x,  std::vector<std::string>& meminfo,
     float mem_pct = 0;
     float swp_pct = 0;
     if(meminfo[0] != "N/A"){
-        mem_pct = stod(meminfo[2]);
-        swp_pct = stod(meminfo[5]);
+        mem_pct = stod(meminfo[2]) * 100;
+        swp_pct = stod(meminfo[5]) * 100;
     }
     int bar_w = max_x - 30;
     if (bar_w > 40) bar_w = 40;

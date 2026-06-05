@@ -64,7 +64,6 @@ void Collector(){
             break;
         }
         s.Update();
-        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
 
@@ -80,7 +79,7 @@ void sortByField(std::vector<Process>& procs, SORT_BY now_by, bool desc){
                 return l[i] < r[i];
             }
         }
-        return true;
+        return false;
     };
 
     if(desc){
@@ -88,14 +87,14 @@ void sortByField(std::vector<Process>& procs, SORT_BY now_by, bool desc){
             if(now_by == SORT_BY::BY_CPU) return l.getCpu() > r.getCpu();
             else if(now_by == SORT_BY::BY_PID) return cmpString(r.Pid(), l.Pid()); 
             else if(now_by == SORT_BY::BY_MEM) return l.getMem() > r.getMem(); 
-            else return true;
+            else return false;
         });
     }else{
         sort(procs.begin(), procs.end(), [now_by, cmpString](const Process& l, const Process& r)->bool{
             if(now_by == SORT_BY::BY_CPU) return l.getCpu() < r.getCpu();
             else if(now_by == SORT_BY::BY_PID) return cmpString(l.Pid(), r.Pid()); 
             else if(now_by == SORT_BY::BY_MEM) return l.getMem() < r.getMem(); 
-            else return true;
+            else return false;
         });
     }
 }
@@ -143,14 +142,14 @@ void Display(){
         werase(win_header);
         werase(win_body);
         werase(win_footer);
-
+    
         //获取数据
         s.lock(); 
-        std::vector<std::string> meminfo = std::move(s.meminfo());
+        std::vector<std::string> meminfo = std::move(s).meminfo();
         std::string kernel = std::move(s.Kernel());
         std::string os_release = std::move(s.os_release());
-        std::vector<std::string> info = std::move(s.Utilization());//进程数，运行数，阻塞数
-        std::vector<Process> procs = std::move(s.Processes());//进程数组, pid ppid status CPU cmd 
+        std::vector<std::string> info = std::move(s).Utilization();//进程数，运行数，阻塞数
+        std::vector<Process>& procs = s.Processes();//进程数组, pid ppid status CPU cmd 
         double CPU_utili = s.getCPU();//s.getCPU()可以获得总统CPU使用率
         s.unlock();
         long long uptime = LinuxParser::UpTime();
