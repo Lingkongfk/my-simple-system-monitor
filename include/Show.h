@@ -33,8 +33,8 @@ void draw_bar(WINDOW* win, int y, int x, int width, float percent, int color_pai
 
 //绘制头部             窗口，    宽度
 void draw_header(WINDOW *win, int max_x, std::vector<std::string>& meminfo,
-                 std::string kernel, std::string os_release,
-                 std::vector<std::string>& processInfo, double cpuInfo, long long uptime);
+                 std::string& kernel, std::string& os_release,
+                 std::vector<std::string>& processInfo, double& cpuInfo, long long& uptime);
 
 //绘制进程列表
 void draw_processes(WINDOW *win, std::vector<Process>& procs, int count,

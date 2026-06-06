@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <mutex>
 #include <ncurses.h>
+#include <ratio>
 #include <sys/select.h>
 #include <sys/unistd.h>
 #include <thread>
@@ -19,12 +20,6 @@
 //声明全局变量
 System s;
 std::atomic_bool flag;//判断是否退出
-
-enum class SORT_BY{
-    BY_CPU,
-    BY_PID,
-    BY_MEM
-};
 
 
 //实现滚轮滑动窗口  //总数量，    视野显示数量， 当前选中， 偏移
@@ -63,11 +58,17 @@ void Collector(){
         if(flag){
             break;
         }
+        auto t_start = std::chrono::high_resolution_clock::now();
         s.Update();
+        auto t_end = std::chrono::high_resolution_clock::now();
+        double ms = std::chrono::duration<double, std::milli>(t_end - t_start).count();
+        fprintf(stderr, "this update spend time: %lf\n", ms);
+        fflush(stderr);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
 
-
+#if 0
 void sortByField(std::vector<Process>& procs, SORT_BY now_by, bool desc){
     //比较字符串
     auto cmpString = [](const std::string& l, const std::string& r)->bool{
@@ -79,26 +80,26 @@ void sortByField(std::vector<Process>& procs, SORT_BY now_by, bool desc){
                 return l[i] < r[i];
             }
         }
-        return false;
+        return true;
     };
 
     if(desc){
         sort(procs.begin(), procs.end(), [now_by, cmpString](const Process& l, const Process& r)->bool{
-            if(now_by == SORT_BY::BY_CPU) return l.getCpu() > r.getCpu();
+            if(now_by == SORT_BY::BY_CPU) return (l.getCpu() == r.getCpu()? cmpString(l.Pid(), r.Pid()):l.getCpu() > r.getCpu());
             else if(now_by == SORT_BY::BY_PID) return cmpString(r.Pid(), l.Pid()); 
-            else if(now_by == SORT_BY::BY_MEM) return l.getMem() > r.getMem(); 
-            else return false;
+            else if(now_by == SORT_BY::BY_MEM) return (l.getMem() == r.getMem()? cmpString(l.Pid(), r.Pid()) : l.getMem() > r.getMem()); 
+            else return true;
         });
     }else{
         sort(procs.begin(), procs.end(), [now_by, cmpString](const Process& l, const Process& r)->bool{
-            if(now_by == SORT_BY::BY_CPU) return l.getCpu() < r.getCpu();
+            if(now_by == SORT_BY::BY_CPU) return (l.getCpu() == r.getCpu()? cmpString(l.Pid(), r.Pid()):l.getCpu() < r.getCpu());
             else if(now_by == SORT_BY::BY_PID) return cmpString(l.Pid(), r.Pid()); 
-            else if(now_by == SORT_BY::BY_MEM) return l.getMem() < r.getMem(); 
-            else return false;
+            else if(now_by == SORT_BY::BY_MEM) return (l.getMem() == r.getMem()? cmpString(l.Pid(), r.Pid()) : l.getMem() < r.getMem()); 
+            else return true;
         });
     }
 }
-
+#endif
 
 //UI线程，每隔200ms读取一次数据并且刷新显示
 void Display(){
@@ -130,11 +131,8 @@ void Display(){
     int signal_sel = 0;//信号选中光标
     AppState state = AppState::NORMAL; 
 
-    //排序状态
-    bool desc = false; // 降序是false
-    SORT_BY now_by = SORT_BY::BY_PID;
 
-    halfdelay(5);//按键等待0.5s
+    halfdelay(2);//按键等待0.5s
 
     refresh();//刷新整个页面，这样下面的窗口刷新才能生效
     while(running){
@@ -145,17 +143,15 @@ void Display(){
     
         //获取数据
         s.lock(); 
-        std::vector<std::string> meminfo = std::move(s).meminfo();
-        std::string kernel = std::move(s.Kernel());
-        std::string os_release = std::move(s.os_release());
-        std::vector<std::string> info = std::move(s).Utilization();//进程数，运行数，阻塞数
+        std::vector<std::string>& meminfo = s.meminfo();
+        std::string& kernel = s.Kernel();
+        std::string& os_release = s.os_release();
+        std::vector<std::string>& info = s.Utilization();//进程数，运行数，阻塞数
         std::vector<Process>& procs = s.Processes();//进程数组, pid ppid status CPU cmd 
-        double CPU_utili = s.getCPU();//s.getCPU()可以获得总统CPU使用率
+        double& CPU_utili = s.getCPU();//s.getCPU()可以获得总统CPU使用率
         s.unlock();
         long long uptime = LinuxParser::UpTime();
 
-        //按照cpu排序
-        sortByField(procs, now_by, desc);
         
         //对数据进程处理
         if(info.size() < 3){
@@ -204,20 +200,28 @@ void Display(){
                 signal_sel = 0;
                 break;
             case 'c':
-                now_by = SORT_BY::BY_CPU;
+                s.SetSortBy(SORT_BY::BY_CPU);
+                s.lock();
+                sortByField(procs, SORT_BY::BY_CPU, s.IsDesc());
+                s.unlock();
                 break;
             case 'p':
-                now_by = SORT_BY::BY_PID;
+                s.SetSortBy(SORT_BY::BY_PID);
+                s.lock();
+                sortByField(procs, SORT_BY::BY_PID, s.IsDesc());
+                s.unlock();
                 break;
             case 'm':
-                now_by = SORT_BY::BY_MEM;
+                s.SetSortBy(SORT_BY::BY_MEM);
+                s.lock();
+                sortByField(procs, SORT_BY::BY_MEM, s.IsDesc());
+                s.unlock();
                 break;
             case 'd':
-                if(desc){
-                    desc = false;
-                }else{
-                    desc = true;
-                }
+                s.ToggleDesc();
+                s.lock();
+                sortByField(procs, s.GetSortBy(), s.IsDesc());
+                s.unlock();
                 break;
             case ERR:
                 break;
@@ -245,10 +249,7 @@ void Display(){
         }
 
 
-    }
-
-    //清理
-    delwin(win_header);
+    } //清理 delwin(win_header);
     delwin(win_body);
     delwin(win_footer);
     endwin();
@@ -256,12 +257,14 @@ void Display(){
 
 int main()
 {
+    freopen("log.txt", "a", stderr);
     flag = false;
     std::thread collector(Collector);
 
     Display();
     flag = true;
     collector.join();
+
     return 0;
 }
 

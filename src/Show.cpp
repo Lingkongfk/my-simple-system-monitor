@@ -31,8 +31,8 @@ void draw_bar(WINDOW* win, int y, int x, int width, float percent, int color_pai
 
 //                      窗口     宽度                             系统信息    进程信息    cpu占用
 void draw_header(WINDOW *win, int max_x,  std::vector<std::string>& meminfo, 
-                 std::string kernel, std::string os_release,
- std::vector<std::string>& processInfo, double cpuInfo, long long uptime)
+                 std::string& kernel, std::string& os_release,
+ std::vector<std::string>& processInfo, double& cpuInfo, long long& uptime)
 {
     // 蓝色标题栏背景
     wattron(win, COLOR_PAIR(4));

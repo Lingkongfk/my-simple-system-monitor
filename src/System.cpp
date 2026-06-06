@@ -11,12 +11,43 @@
 #include <vector>
 #include <utility>
 #include <climits>
-
+#include <algorithm>
 //得到单调递增的精确时间
 double getMonotonicTime(){
      struct timespec ts;
      clock_gettime(CLOCK_MONOTONIC, &ts);
      return ts.tv_sec + ts.tv_nsec / 1.0e9;
+}
+
+void sortByField(std::vector<Process>& procs, SORT_BY now_by, bool desc){
+    //比较字符串
+    auto cmpString = [](const std::string& l, const std::string& r)->bool{
+        if(l.size() != r.size()){
+            return l.size() < r.size();
+        }
+        for(int i=0;i<l.size();i++){
+            if(l[i]!=r[i]){
+                return l[i] < r[i];
+            }
+        }
+        return true;
+    };
+
+    if(desc){
+        sort(procs.begin(), procs.end(), [now_by, cmpString](const Process& l, const Process& r)->bool{
+            if(now_by == SORT_BY::BY_CPU) return (l.getCpu() == r.getCpu()? cmpString(l.Pid(), r.Pid()):l.getCpu() > r.getCpu());
+            else if(now_by == SORT_BY::BY_PID) return cmpString(r.Pid(), l.Pid()); 
+            else if(now_by == SORT_BY::BY_MEM) return (l.getMem() == r.getMem()? cmpString(l.Pid(), r.Pid()) : l.getMem() > r.getMem()); 
+            else return true;
+        });
+    }else{
+        sort(procs.begin(), procs.end(), [now_by, cmpString](const Process& l, const Process& r)->bool{
+            if(now_by == SORT_BY::BY_CPU) return (l.getCpu() == r.getCpu()? cmpString(l.Pid(), r.Pid()):l.getCpu() < r.getCpu());
+            else if(now_by == SORT_BY::BY_PID) return cmpString(l.Pid(), r.Pid()); 
+            else if(now_by == SORT_BY::BY_MEM) return (l.getMem() == r.getMem()? cmpString(l.Pid(), r.Pid()) : l.getMem() < r.getMem()); 
+            else return true;
+        });
+    }
 }
 
 
@@ -51,7 +82,7 @@ void System::Update(){
     }
 
     //采样间隔
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    //std::this_thread::sleep_for(std::chrono::milliseconds(500));
     
     double t2 = getMonotonicTime();
     std::vector<std::string> cpuinfo2 = LinuxParser::CpuUtilization();
@@ -77,22 +108,34 @@ void System::Update(){
         double rss_kb = rss * sysconf(_SC_PAGESIZE) / 1024;
         temp_processes[i].setMem(rss_kb / totalMem * 100);
     }
+    //新数据放在缓冲里面
+
+    utilization_back_ = std::move(temp_utilization);
     processes_back_ = std::move(temp_processes);
+    CPUused_back_ = temp_CPUused;
+    meminfo_back_ = std::move(meminfo);
+    kernel_back_ = kernel;
+    os_release_back_ = os_releas;
+
+    SORT_BY current_sort = sort_by_.load();
+    bool current_desc = desc_.load();
+
+    sortByField(processes_back_, current_sort, current_desc);    
 
     //最后上锁数据更新
     {
         std::unique_lock<std::mutex> lock(mtx_);
-        utilization_ = std::move(temp_utilization);
+        std::swap(utilization_, utilization_back_);
         std::swap(processes_, processes_back_);
-        CPUused = std::move(temp_CPUused);
-        meminfo_ = std::move(meminfo);
-        kernel_ = std::move(kernel);
-        os_release_ = std::move(os_releas);
+        std::swap(CPUused , CPUused_back_);
+        std::swap(meminfo_, meminfo_back_);
+        std::swap(kernel_, kernel_back_);
+        std::swap(os_release_, os_release_back_);
         
     }
 }
-std::vector<std::string>&& System::Utilization()&&{
-    return std::move(utilization_);
+std::vector<std::string>& System::Utilization(){
+    return utilization_;
 }
 
 //提供给UI
@@ -100,18 +143,18 @@ std::vector<Process>& System::Processes(){
     return processes_;
 }
 
-double System::getCPU(){
+double& System::getCPU(){
     return CPUused;
 }
 
-std::vector<std::string>&& System::meminfo()&&{
-    return std::move(meminfo_);
+std::vector<std::string>& System::meminfo(){
+    return meminfo_;
 }
 
-std::string System::Kernel(){
+std::string& System::Kernel(){
     return kernel_;
 }
 
-std::string System::os_release(){
+std::string& System::os_release(){
     return os_release_;
 }
