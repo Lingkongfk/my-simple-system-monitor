@@ -45,6 +45,9 @@ private:
     std::vector<std::string> utilization_;//获得基本CPU的信息
     std::vector<std::string> utilization_back_;
     std::mutex mtx_;//互斥锁，线程安全访问System内部信息
+    
+    //数据已经更新
+    std::atomic_bool hasUpdate;
 
     //原子变量保证线程安全
     std::atomic<SORT_BY> sort_by_ {SORT_BY::BY_PID};

@@ -110,51 +110,71 @@ void System::Update(){
     }
     //新数据放在缓冲里面
 
-    utilization_back_ = std::move(temp_utilization);
-    processes_back_ = std::move(temp_processes);
-    CPUused_back_ = temp_CPUused;
-    meminfo_back_ = std::move(meminfo);
-    kernel_back_ = kernel;
-    os_release_back_ = os_releas;
 
     SORT_BY current_sort = sort_by_.load();
     bool current_desc = desc_.load();
 
-    sortByField(processes_back_, current_sort, current_desc);    
+    sortByField(temp_processes, current_sort, current_desc);    
 
     //最后上锁数据更新
     {
         std::unique_lock<std::mutex> lock(mtx_);
-        std::swap(utilization_, utilization_back_);
-        std::swap(processes_, processes_back_);
-        std::swap(CPUused , CPUused_back_);
-        std::swap(meminfo_, meminfo_back_);
-        std::swap(kernel_, kernel_back_);
-        std::swap(os_release_, os_release_back_);
+        hasUpdate = true;
+        std::swap(temp_utilization, utilization_back_);
+        std::swap(temp_processes, processes_back_);
+        std::swap(temp_CPUused , CPUused_back_);
+        std::swap(meminfo, meminfo_back_);
+        std::swap(kernel, kernel_back_);
+        std::swap(os_releas, os_release_back_);
         
     }
 }
 std::vector<std::string>& System::Utilization(){
+    if(hasUpdate){
+        std::lock_guard<std::mutex> lock(mtx_);
+        std::swap(utilization_back_, utilization_);
+    }
     return utilization_;
 }
 
 //提供给UI
 std::vector<Process>& System::Processes(){
+    if(hasUpdate){
+        std::lock_guard<std::mutex> lock(mtx_);
+        std::swap(processes_, processes_back_);
+    }
     return processes_;
 }
 
 double& System::getCPU(){
+    if(hasUpdate){
+        std::lock_guard<std::mutex> lock(mtx_);
+        std::swap(CPUused_back_, CPUused);
+    }
+    hasUpdate = false;
     return CPUused;
 }
 
 std::vector<std::string>& System::meminfo(){
+    if(hasUpdate){
+        std::lock_guard<std::mutex> lock(mtx_);
+        std::swap(meminfo_back_, meminfo_);
+    }
     return meminfo_;
 }
 
 std::string& System::Kernel(){
+    if(hasUpdate){
+        std::lock_guard<std::mutex> lock(mtx_);
+        std::swap(kernel_, kernel_back_);
+    }
     return kernel_;
 }
 
 std::string& System::os_release(){
+    if(hasUpdate){
+        std::lock_guard<std::mutex> lock(mtx_);
+        std::swap(os_release_, os_release_back_);
+    }
     return os_release_;
 }

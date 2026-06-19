@@ -142,14 +142,12 @@ void Display(){
         werase(win_footer);
     
         //获取数据
-        s.lock(); 
         std::vector<std::string>& meminfo = s.meminfo();
         std::string& kernel = s.Kernel();
         std::string& os_release = s.os_release();
         std::vector<std::string>& info = s.Utilization();//进程数，运行数，阻塞数
         std::vector<Process>& procs = s.Processes();//进程数组, pid ppid status CPU cmd 
         double& CPU_utili = s.getCPU();//s.getCPU()可以获得总统CPU使用率
-        s.unlock();
         long long uptime = LinuxParser::UpTime();
 
         
