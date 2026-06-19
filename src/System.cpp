@@ -82,7 +82,7 @@ void System::Update(){
     }
 
     //采样间隔
-    //std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
     
     double t2 = getMonotonicTime();
     std::vector<std::string> cpuinfo2 = LinuxParser::CpuUtilization();
